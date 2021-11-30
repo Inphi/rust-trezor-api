@@ -16,8 +16,8 @@ use utils;
 pub use protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
 pub use protos::Features;
 pub use protos::InputScriptType;
-pub use protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
 use protos::OutputScriptType;
+pub use protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
 use protos::TxRequest_RequestType as TxRequestType;
 
 /// Fulfill a TxRequest for TXINPUT.

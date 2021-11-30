@@ -46,7 +46,10 @@ trezor_message_impl!(EntropyRequest, MessageType_EntropyRequest);
 trezor_message_impl!(EntropyAck, MessageType_EntropyAck);
 trezor_message_impl!(PassphraseRequest, MessageType_PassphraseRequest);
 trezor_message_impl!(PassphraseAck, MessageType_PassphraseAck);
-trezor_message_impl!(Deprecated_PassphraseStateRequest, MessageType_Deprecated_PassphraseStateRequest);
+trezor_message_impl!(
+	Deprecated_PassphraseStateRequest,
+	MessageType_Deprecated_PassphraseStateRequest
+);
 trezor_message_impl!(Deprecated_PassphraseStateAck, MessageType_Deprecated_PassphraseStateAck);
 trezor_message_impl!(RecoveryDevice, MessageType_RecoveryDevice);
 trezor_message_impl!(WordRequest, MessageType_WordRequest);
@@ -123,7 +126,10 @@ trezor_message_impl!(StellarGetAddress, MessageType_StellarGetAddress);
 trezor_message_impl!(StellarAddress, MessageType_StellarAddress);
 trezor_message_impl!(StellarCreateAccountOp, MessageType_StellarCreateAccountOp);
 trezor_message_impl!(StellarPaymentOp, MessageType_StellarPaymentOp);
-trezor_message_impl!(StellarPathPaymentStrictReceiveOp, MessageType_StellarPathPaymentStrictReceiveOp);
+trezor_message_impl!(
+	StellarPathPaymentStrictReceiveOp,
+	MessageType_StellarPathPaymentStrictReceiveOp
+);
 trezor_message_impl!(StellarManageSellOfferOp, MessageType_StellarManageSellOfferOp);
 trezor_message_impl!(StellarCreatePassiveSellOfferOp, MessageType_StellarCreatePassiveSellOfferOp);
 trezor_message_impl!(StellarSetOptionsOp, MessageType_StellarSetOptionsOp);

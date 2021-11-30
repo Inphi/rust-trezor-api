@@ -67,10 +67,12 @@ impl fmt::Display for Error {
 			Error::UnknownHidVersion => write!(f, "HID version of the device unknown"),
 			Error::DeviceReadTimeout => write!(f, "timeout expired while reading from device"),
 			Error::DeviceBadMagic => write!(f, "the device sent chunk with wrong magic value"),
-			Error::DeviceBadSessionId => write!(f, "the device sent a message with a wrong session id"),
+			Error::DeviceBadSessionId => {
+				write!(f, "the device sent a message with a wrong session id")
+			}
 			Error::DeviceUnexpectedSequenceNumber => {
 				write!(f, "the device sent an unexpected sequence number")
-			},
+			}
 			Error::UnexpectedChunkSizeFromDevice(s) => write!(f, "{}: {}", self, s),
 			Error::InvalidMessageType(ref t) => write!(f, "{}: {}", self, t),
 			Error::NoDeviceSerial => write!(f, "unable to determine device serial number"),
