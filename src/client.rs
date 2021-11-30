@@ -18,7 +18,6 @@ use transport::{ProtoMessage, Transport};
 use utils;
 
 // Some types with raw protos that we use in the public interface so they have to be exported.
-use protos::ApplySettings_PassphraseSourceType as PassphraseSource;
 pub use protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
 pub use protos::Features;
 pub use protos::InputScriptType;
@@ -43,7 +42,7 @@ pub enum InteractionType {
 //TODO(stevenroose) should this be FnOnce and put in an FnBox?
 /// Function to be passed to the `Trezor.call` method to process the Trezor response message into a
 /// general-purpose type.
-pub type ResultHandler<'a, T, R> = Fn(&'a mut Trezor, R) -> Result<T>;
+pub type ResultHandler<'a, T, R> = dyn Fn(&'a mut Trezor, R) -> Result<T>;
 
 /// A button request message sent by the device.
 pub struct ButtonRequest<'a, T, R: TrezorMessage> {
@@ -62,11 +61,6 @@ impl<'a, T, R: TrezorMessage> ButtonRequest<'a, T, R> {
 	/// The type of button request.
 	pub fn request_type(&self) -> ButtonRequestType {
 		self.message.get_code()
-	}
-
-	/// The metadata sent with the button request.
-	pub fn request_data(&self) -> &str {
-		self.message.get_data()
 	}
 
 	/// Ack the request and get the next message from the device.
@@ -117,11 +111,6 @@ impl<'a, T, R: TrezorMessage> fmt::Debug for PassphraseRequest<'a, T, R> {
 }
 
 impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
-	/// Check whether the use is supposed to enter the passphrase on the device or not.
-	pub fn on_device(&self) -> bool {
-		self.message.get_on_device()
-	}
-
 	/// Ack the request with a passphrase and get the next message from the device.
 	pub fn ack_passphrase(self, passphrase: String) -> Result<TrezorResponse<'a, T, R>> {
 		let mut req = protos::PassphraseAck::new();
@@ -139,7 +128,7 @@ impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
 
 /// A passphrase state request message sent by the device.
 pub struct PassphraseStateRequest<'a, T, R: TrezorMessage> {
-	message: protos::PassphraseStateRequest,
+	message: protos::Deprecated_PassphraseStateRequest,
 	client: &'a mut Trezor,
 	result_handler: Box<ResultHandler<'a, T, R>>,
 }
@@ -158,7 +147,7 @@ impl<'a, T, R: TrezorMessage> PassphraseStateRequest<'a, T, R> {
 
 	/// Ack the receipt of the passphrase state.
 	pub fn ack(self) -> Result<TrezorResponse<'a, T, R>> {
-		let req = protos::PassphraseStateAck::new();
+		let req = protos::Deprecated_PassphraseStateAck::new();
 		self.client.call(req, self.result_handler)
 	}
 }
@@ -310,11 +299,11 @@ pub struct Trezor {
 	model: Model,
 	// Cached features for later inspection.
 	features: Option<protos::Features>,
-	transport: Box<Transport>,
+	transport: Box<dyn Transport>,
 }
 
 /// Create a new Trezor instance with the given transport.
-pub fn trezor_with_transport(model: Model, transport: Box<Transport>) -> Trezor {
+pub fn trezor_with_transport(model: Model, transport: Box<dyn Transport>) -> Trezor {
 	Trezor {
 		model: model,
 		transport: transport,
@@ -391,7 +380,7 @@ impl Trezor {
 						result_handler: result_handler,
 					}))
 				}
-				MessageType_PassphraseStateRequest => {
+				MessageType_Deprecated_PassphraseStateRequest => {
 					let req_msg = resp.into_message()?;
 					trace!("Received PassphraseStateRequest: {:?}", req_msg);
 					Ok(TrezorResponse::PassphraseStateRequest(PassphraseStateRequest {
@@ -420,7 +409,7 @@ impl Trezor {
 
 	pub fn initialize(&mut self) -> Result<TrezorResponse<Features, Features>> {
 		let mut req = protos::Initialize::new();
-		req.set_state(Vec::new());
+		req.set_session_id(Vec::new());
 		self.call(req, Box::new(|_, m| Ok(m)))
 	}
 
@@ -504,7 +493,6 @@ impl Trezor {
 		label: Option<String>,
 		use_passphrase: Option<bool>,
 		homescreen: Option<Vec<u8>>,
-		passphrase_source: Option<PassphraseSource>,
 		auto_lock_delay_ms: Option<usize>,
 	) -> Result<TrezorResponse<(), protos::Success>> {
 		let mut req = protos::ApplySettings::new();
@@ -516,9 +504,6 @@ impl Trezor {
 		}
 		if let Some(homescreen) = homescreen {
 			req.set_homescreen(homescreen);
-		}
-		if let Some(passphrase_source) = passphrase_source {
-			req.set_passphrase_source(passphrase_source);
 		}
 		if let Some(auto_lock_delay_ms) = auto_lock_delay_ms {
 			req.set_auto_lock_delay_ms(auto_lock_delay_ms as u32);

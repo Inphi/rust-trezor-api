@@ -36,7 +36,7 @@ trezor_message_impl!(Features, MessageType_Features);
 trezor_message_impl!(PinMatrixRequest, MessageType_PinMatrixRequest);
 trezor_message_impl!(PinMatrixAck, MessageType_PinMatrixAck);
 trezor_message_impl!(Cancel, MessageType_Cancel);
-trezor_message_impl!(ClearSession, MessageType_ClearSession);
+trezor_message_impl!(LockDevice, MessageType_LockDevice);
 trezor_message_impl!(ApplySettings, MessageType_ApplySettings);
 trezor_message_impl!(ButtonRequest, MessageType_ButtonRequest);
 trezor_message_impl!(ButtonAck, MessageType_ButtonAck);
@@ -46,8 +46,8 @@ trezor_message_impl!(EntropyRequest, MessageType_EntropyRequest);
 trezor_message_impl!(EntropyAck, MessageType_EntropyAck);
 trezor_message_impl!(PassphraseRequest, MessageType_PassphraseRequest);
 trezor_message_impl!(PassphraseAck, MessageType_PassphraseAck);
-trezor_message_impl!(PassphraseStateRequest, MessageType_PassphraseStateRequest);
-trezor_message_impl!(PassphraseStateAck, MessageType_PassphraseStateAck);
+trezor_message_impl!(Deprecated_PassphraseStateRequest, MessageType_Deprecated_PassphraseStateRequest);
+trezor_message_impl!(Deprecated_PassphraseStateAck, MessageType_Deprecated_PassphraseStateAck);
 trezor_message_impl!(RecoveryDevice, MessageType_RecoveryDevice);
 trezor_message_impl!(WordRequest, MessageType_WordRequest);
 trezor_message_impl!(WordAck, MessageType_WordAck);
@@ -100,6 +100,7 @@ trezor_message_impl!(NEMSignTx, MessageType_NEMSignTx);
 trezor_message_impl!(NEMSignedTx, MessageType_NEMSignedTx);
 trezor_message_impl!(NEMDecryptMessage, MessageType_NEMDecryptMessage);
 trezor_message_impl!(NEMDecryptedMessage, MessageType_NEMDecryptedMessage);
+/*
 trezor_message_impl!(LiskGetAddress, MessageType_LiskGetAddress);
 trezor_message_impl!(LiskAddress, MessageType_LiskAddress);
 trezor_message_impl!(LiskSignTx, MessageType_LiskSignTx);
@@ -109,6 +110,7 @@ trezor_message_impl!(LiskMessageSignature, MessageType_LiskMessageSignature);
 trezor_message_impl!(LiskVerifyMessage, MessageType_LiskVerifyMessage);
 trezor_message_impl!(LiskGetPublicKey, MessageType_LiskGetPublicKey);
 trezor_message_impl!(LiskPublicKey, MessageType_LiskPublicKey);
+*/
 trezor_message_impl!(TezosGetAddress, MessageType_TezosGetAddress);
 trezor_message_impl!(TezosAddress, MessageType_TezosAddress);
 trezor_message_impl!(TezosSignTx, MessageType_TezosSignTx);
@@ -121,9 +123,9 @@ trezor_message_impl!(StellarGetAddress, MessageType_StellarGetAddress);
 trezor_message_impl!(StellarAddress, MessageType_StellarAddress);
 trezor_message_impl!(StellarCreateAccountOp, MessageType_StellarCreateAccountOp);
 trezor_message_impl!(StellarPaymentOp, MessageType_StellarPaymentOp);
-trezor_message_impl!(StellarPathPaymentOp, MessageType_StellarPathPaymentOp);
-trezor_message_impl!(StellarManageOfferOp, MessageType_StellarManageOfferOp);
-trezor_message_impl!(StellarCreatePassiveOfferOp, MessageType_StellarCreatePassiveOfferOp);
+trezor_message_impl!(StellarPathPaymentStrictReceiveOp, MessageType_StellarPathPaymentStrictReceiveOp);
+trezor_message_impl!(StellarManageSellOfferOp, MessageType_StellarManageSellOfferOp);
+trezor_message_impl!(StellarCreatePassiveSellOfferOp, MessageType_StellarCreatePassiveSellOfferOp);
 trezor_message_impl!(StellarSetOptionsOp, MessageType_StellarSetOptionsOp);
 trezor_message_impl!(StellarChangeTrustOp, MessageType_StellarChangeTrustOp);
 trezor_message_impl!(StellarAllowTrustOp, MessageType_StellarAllowTrustOp);
@@ -131,33 +133,12 @@ trezor_message_impl!(StellarAccountMergeOp, MessageType_StellarAccountMergeOp);
 trezor_message_impl!(StellarManageDataOp, MessageType_StellarManageDataOp);
 trezor_message_impl!(StellarBumpSequenceOp, MessageType_StellarBumpSequenceOp);
 trezor_message_impl!(StellarSignedTx, MessageType_StellarSignedTx);
-trezor_message_impl!(TronGetAddress, MessageType_TronGetAddress);
-trezor_message_impl!(TronAddress, MessageType_TronAddress);
-trezor_message_impl!(TronSignTx, MessageType_TronSignTx);
-trezor_message_impl!(TronSignedTx, MessageType_TronSignedTx);
 trezor_message_impl!(CardanoSignTx, MessageType_CardanoSignTx);
-trezor_message_impl!(CardanoTxRequest, MessageType_CardanoTxRequest);
 trezor_message_impl!(CardanoGetPublicKey, MessageType_CardanoGetPublicKey);
 trezor_message_impl!(CardanoPublicKey, MessageType_CardanoPublicKey);
 trezor_message_impl!(CardanoGetAddress, MessageType_CardanoGetAddress);
 trezor_message_impl!(CardanoAddress, MessageType_CardanoAddress);
-trezor_message_impl!(CardanoTxAck, MessageType_CardanoTxAck);
 trezor_message_impl!(CardanoSignedTx, MessageType_CardanoSignedTx);
-trezor_message_impl!(OntologyGetAddress, MessageType_OntologyGetAddress);
-trezor_message_impl!(OntologyAddress, MessageType_OntologyAddress);
-trezor_message_impl!(OntologyGetPublicKey, MessageType_OntologyGetPublicKey);
-trezor_message_impl!(OntologyPublicKey, MessageType_OntologyPublicKey);
-trezor_message_impl!(OntologySignTransfer, MessageType_OntologySignTransfer);
-trezor_message_impl!(OntologySignedTransfer, MessageType_OntologySignedTransfer);
-trezor_message_impl!(OntologySignWithdrawOng, MessageType_OntologySignWithdrawOng);
-trezor_message_impl!(OntologySignedWithdrawOng, MessageType_OntologySignedWithdrawOng);
-trezor_message_impl!(OntologySignOntIdRegister, MessageType_OntologySignOntIdRegister);
-trezor_message_impl!(OntologySignedOntIdRegister, MessageType_OntologySignedOntIdRegister);
-trezor_message_impl!(OntologySignOntIdAddAttributes, MessageType_OntologySignOntIdAddAttributes);
-trezor_message_impl!(
-	OntologySignedOntIdAddAttributes,
-	MessageType_OntologySignedOntIdAddAttributes
-);
 trezor_message_impl!(RippleGetAddress, MessageType_RippleGetAddress);
 trezor_message_impl!(RippleAddress, MessageType_RippleAddress);
 trezor_message_impl!(RippleSignTx, MessageType_RippleSignTx);
@@ -200,11 +181,6 @@ trezor_message_impl!(
 	MessageType_MoneroTransactionAllOutSetRequest
 );
 trezor_message_impl!(MoneroTransactionAllOutSetAck, MessageType_MoneroTransactionAllOutSetAck);
-trezor_message_impl!(
-	MoneroTransactionMlsagDoneRequest,
-	MessageType_MoneroTransactionMlsagDoneRequest
-);
-trezor_message_impl!(MoneroTransactionMlsagDoneAck, MessageType_MoneroTransactionMlsagDoneAck);
 trezor_message_impl!(
 	MoneroTransactionSignInputRequest,
 	MessageType_MoneroTransactionSignInputRequest
