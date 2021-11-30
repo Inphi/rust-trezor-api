@@ -12,19 +12,6 @@
 //! Please be aware that `trace` logging can contain sensitive data.
 //!
 
-extern crate bitcoin;
-extern crate bitcoin_bech32;
-extern crate bitcoin_hashes;
-extern crate byteorder;
-extern crate hex;
-extern crate hid;
-extern crate libusb;
-extern crate unicode_normalization;
-#[macro_use]
-extern crate log;
-extern crate protobuf;
-extern crate secp256k1;
-
 mod messages;
 mod transport;
 
@@ -118,7 +105,7 @@ pub fn unique(debug: bool) -> Result<Trezor> {
 		0 => Err(Error::NoDeviceFound),
 		1 => Ok(devices.remove(0).connect()?),
 		_ => {
-			debug!("Trezor devices found: {:?}", devices);
+			log::debug!("Trezor devices found: {:?}", devices);
 			Err(Error::DeviceNotUnique)
 		}
 	}

@@ -10,9 +10,9 @@ use bitcoin_hashes::sha256d;
 use protobuf::error::ProtobufError;
 use secp256k1;
 
-use client::InteractionType;
-use protos;
-use transport;
+use crate::client::InteractionType;
+use crate::protos;
+use crate::transport;
 
 /// Trezor error.
 #[derive(Debug)]

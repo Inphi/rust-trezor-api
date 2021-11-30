@@ -4,24 +4,23 @@ use bitcoin::network::constants::Network; //TODO(stevenroose) change after https
 use bitcoin::util::bip32;
 use bitcoin::util::psbt;
 use bitcoin::Address;
-use hex;
-use secp256k1;
+use log::{debug, trace};
 use unicode_normalization::UnicodeNormalization;
 
 use super::Model;
-use error::{Error, Result};
-use flows::sign_tx::SignTxProgress;
-use messages::TrezorMessage;
-use protos;
-use protos::MessageType::*;
-use transport::{ProtoMessage, Transport};
-use utils;
+use crate::error::{Error, Result};
+use crate::messages::TrezorMessage;
+use crate::protos;
+use crate::protos::MessageType::*;
+use crate::transport::{ProtoMessage, Transport};
+use crate::SignTxProgress;
 
 // Some types with raw protos that we use in the public interface so they have to be exported.
-pub use protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
-pub use protos::Features;
-pub use protos::InputScriptType;
-pub use protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
+pub use crate::protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
+pub use crate::protos::Features;
+pub use crate::protos::InputScriptType;
+pub use crate::protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
+use crate::utils;
 
 /// The different options for the number of words in a seed phrase.
 pub enum WordCount {

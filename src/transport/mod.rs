@@ -1,8 +1,8 @@
-use fmt;
 use protobuf;
+use std::fmt;
 
 use super::{AvailableDevice, Model};
-use protos::MessageType;
+use crate::protos::MessageType;
 
 pub mod error;
 pub mod hid;

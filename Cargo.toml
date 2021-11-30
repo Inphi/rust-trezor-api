@@ -1,10 +1,11 @@
 [package]
 name = "trezor"
-version = "0.0.1"
-authors = ["Steven Roose <steven@stevenroose.org>"]
+version = "0.0.2"
+authors = ["Steven Roose <steven@stevenroose.org>", "Murphy Law <mlaw2501@gmail.com>"]
 license = "CC0-1.0"
-homepage = "https://github.com/stevenroose/rust-trezor-api"
-repository = "https://github.com/stevenroose/rust-trezor-api"
+edition = "2021"
+homepage = "https://github.com/inphi/rust-trezor-api"
+repository = "https://github.com/inphi/rust-trezor-api"
 description = "Client library for interfacing with Trezor hardware wallet devices."
 keywords = [ "bitcoin", "trezor", "wallet" ]
 readme = "README.md"
