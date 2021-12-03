@@ -1,30 +1,11 @@
-use protobuf;
-use std::fmt;
-
-use super::{AvailableDevice, Model};
+use super::Model;
 use crate::protos::MessageType;
 
 pub mod error;
+#[cfg(feature = "hid-device")]
 pub mod hid;
 pub mod protocol;
 pub mod webusb;
-
-/// An available transport for a Trezor device, containing any of the different supported
-/// transports.
-#[derive(Debug)]
-pub enum AvailableDeviceTransport {
-	Hid(hid::AvailableHidTransport),
-	WebUsb(webusb::AvailableWebUsbTransport),
-}
-
-impl fmt::Display for AvailableDeviceTransport {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		match self {
-			AvailableDeviceTransport::Hid(ref t) => write!(f, "{}", t),
-			AvailableDeviceTransport::WebUsb(ref t) => write!(f, "{}", t),
-		}
-	}
-}
 
 /// A protobuf message accompanied by the message type.  This type is used to pass messages over the
 /// transport and used to contain messages received from the transport.
@@ -58,15 +39,6 @@ pub trait Transport {
 
 	fn write_message(&mut self, message: ProtoMessage) -> Result<(), error::Error>;
 	fn read_message(&mut self) -> Result<ProtoMessage, error::Error>;
-}
-
-/// A delegation method to connect an available device transport.  It delegates to the different
-/// transport types.
-pub fn connect(available_device: &AvailableDevice) -> Result<Box<dyn Transport>, error::Error> {
-	match available_device.transport {
-		AvailableDeviceTransport::Hid(_) => hid::HidTransport::connect(&available_device),
-		AvailableDeviceTransport::WebUsb(_) => webusb::WebUsbTransport::connect(&available_device),
-	}
 }
 
 mod constants {

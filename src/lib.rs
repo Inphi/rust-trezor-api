@@ -54,24 +54,30 @@ impl fmt::Display for Model {
 
 /// A device found by the `find_devices()` method.  It can be connected to using the `connect()`
 /// method.
-#[derive(Debug)]
-pub struct AvailableDevice {
-	pub model: Model,
-	pub debug: bool,
-	transport: transport::AvailableDeviceTransport,
+pub trait AvailableDevice {
+	fn model(&self) -> Model;
+	fn debug(&self) -> bool;
+	fn transport(
+		&self,
+	) -> std::result::Result<Box<dyn transport::Transport>, transport::error::Error>;
+
+	fn connect(&self) -> Result<Trezor> {
+		let transport = self.transport().map_err(|e| Error::TransportConnect(e))?;
+		Ok(client::trezor_with_transport(self.model(), transport))
+	}
+
+	fn fmt(&self, f: &mut fmt::Formatter) -> core::result::Result<(), fmt::Error>;
 }
 
-impl fmt::Display for AvailableDevice {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{} (transport: {}) (debug: {})", self.model, &self.transport, self.debug)
+impl core::fmt::Display for dyn AvailableDevice {
+	fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+		self.fmt(f)
 	}
 }
 
-impl AvailableDevice {
-	/// Connect to the device.
-	pub fn connect(self) -> Result<Trezor> {
-		let transport = transport::connect(&self).map_err(|e| Error::TransportConnect(e))?;
-		Ok(client::trezor_with_transport(self.model, transport))
+impl core::fmt::Debug for dyn AvailableDevice {
+	fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+		write!(f, "AvailableDevice{{{}}}", self)
 	}
 }
 
@@ -80,16 +86,17 @@ impl AvailableDevice {
 ///
 /// Note: This will not show older devices that only support the HID interface.
 /// To use those, please use [find_hid_device].
-pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>> {
+pub fn find_devices(debug: bool) -> Result<Vec<Box<dyn AvailableDevice>>> {
 	let mut devices = Vec::new();
 	use transport::webusb::WebUsbTransport;
 	devices.extend(WebUsbTransport::find_devices(debug).map_err(|e| Error::TransportConnect(e))?);
 	Ok(devices)
 }
 
+#[cfg(feature = "hid-device")]
 /// Search for old HID devices. This should only be used for older devices that don't have the
 /// firmware updated to version 1.7.0 yet. Trying to connect to a post-1.7.0 device will fail.
-pub fn find_hid_devices() -> Result<Vec<AvailableDevice>> {
+pub fn find_hid_devices() -> Result<Vec<Box<dyn AvailableDevice>>> {
 	use transport::hid::HidTransport;
 	Ok(HidTransport::find_devices(true).map_err(|e| Error::TransportConnect(e))?)
 }

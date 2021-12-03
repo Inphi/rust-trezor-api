@@ -4,9 +4,10 @@ use std::time::Duration;
 use libusb;
 
 use super::super::AvailableDevice;
+use super::Model;
 use crate::transport::error::Error;
 use crate::transport::protocol::{Link, Protocol, ProtocolV1};
-use crate::transport::{derive_model, AvailableDeviceTransport, ProtoMessage, Transport};
+use crate::transport::{derive_model, ProtoMessage, Transport};
 
 mod constants {
 	///! A collection of constants related to the WebUsb protocol.
@@ -28,19 +29,6 @@ const CHUNK_SIZE: usize = 64;
 
 const READ_TIMEOUT_MS: u64 = 100000;
 const WRITE_TIMEOUT_MS: u64 = 100000;
-
-/// An available transport for connecting with a device.
-#[derive(Debug)]
-pub struct AvailableWebUsbTransport {
-	pub bus: u8,
-	pub address: u8,
-}
-
-impl fmt::Display for AvailableWebUsbTransport {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "WebUSB ({}:{})", self.bus, self.address)
-	}
-}
 
 /// An actual serial HID USB link to a device over which bytes can be sent.
 pub struct WebUsbLink {
@@ -82,13 +70,20 @@ impl Link for WebUsbLink {
 	}
 }
 
+struct AvailableWebUsbDevice {
+	model: Model,
+	debug: bool,
+	bus: u8,
+	address: u8,
+}
+
 /// An implementation of the Transport interface for WebUSB devices.
 pub struct WebUsbTransport {
 	protocol: ProtocolV1<WebUsbLink>,
 }
 
 impl WebUsbTransport {
-	pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>, Error> {
+	pub fn find_devices(debug: bool) -> Result<Vec<Box<dyn AvailableDevice>>, Error> {
 		let usb_ctx = libusb::Context::new()?;
 
 		let mut devices = Vec::new();
@@ -115,26 +110,29 @@ impl WebUsbTransport {
 				continue;
 			}
 
-			devices.push(AvailableDevice {
-				model: model,
-				debug: debug,
-				transport: AvailableDeviceTransport::WebUsb(AvailableWebUsbTransport {
-					bus: dev.bus_number(),
-					address: dev.address(),
-				}),
+			let device: Box<dyn AvailableDevice> = Box::new(AvailableWebUsbDevice {
+				model,
+				debug,
+				bus: dev.bus_number(),
+				address: dev.address(),
 			});
+			devices.push(device);
 		}
 		Ok(devices)
 	}
+}
+
+impl AvailableDevice for AvailableWebUsbDevice {
+	fn model(&self) -> Model {
+		self.model
+	}
+	fn debug(&self) -> bool {
+		self.debug
+	}
 
 	/// Connect to a device over the WebUSB transport.
-	pub fn connect(device: &AvailableDevice) -> Result<Box<dyn Transport>, Error> {
-		let transport = match device.transport {
-			AvailableDeviceTransport::WebUsb(ref t) => t,
-			_ => panic!("passed wrong AvailableDevice in WebUsbTransport::connect"),
-		};
-
-		let interface = match device.debug {
+	fn transport(&self) -> Result<Box<dyn Transport>, Error> {
+		let interface = match self.debug {
 			false => constants::INTERFACE,
 			true => constants::INTERFACE_DEBUG,
 		};
@@ -152,12 +150,12 @@ impl WebUsbTransport {
 			let dev = context_ref
 				.devices()?
 				.iter()
-				.find(|dev| dev.bus_number() == transport.bus && dev.address() == transport.address)
+				.find(|dev| dev.bus_number() == self.bus && dev.address() == self.address)
 				.ok_or(Error::DeviceDisconnected)?;
 			// Check if there is not another device connected on this bus.
 			let dev_desc = dev.device_descriptor()?;
 			let dev_id = (dev_desc.vendor_id(), dev_desc.product_id());
-			if derive_model(dev_id).as_ref() != Some(&device.model) {
+			if derive_model(dev_id).as_ref() != Some(&self.model) {
 				return Err(Error::DeviceDisconnected);
 			}
 			let mut handle = dev.open()?;
@@ -172,13 +170,21 @@ impl WebUsbTransport {
 				link: WebUsbLink {
 					libusb_context: context_ref,
 					handle: handle_ref,
-					endpoint: match device.debug {
+					endpoint: match self.debug {
 						false => constants::ENDPOINT,
 						true => constants::ENDPOINT_DEBUG,
 					},
 				},
 			},
 		}))
+	}
+
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(
+			f,
+			"model:{}, debug:{}, WebUSB ({}:{})",
+			self.model, self.debug, self.bus, self.address
+		)
 	}
 }
 

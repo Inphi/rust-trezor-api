@@ -3,12 +3,14 @@
 use std::error;
 use std::fmt;
 
+#[cfg(feature = "hid-device")]
 use hid;
 use libusb;
 
 /// Trezor error.
 #[derive(Debug)]
 pub enum Error {
+	#[cfg(feature = "hid-device")]
 	/// Error from hidapi.
 	Hid(hid::Error),
 	/// Error from libusb.
@@ -35,6 +37,7 @@ pub enum Error {
 	NoDeviceSerial,
 }
 
+#[cfg(feature = "hid-device")]
 impl From<hid::Error> for Error {
 	fn from(e: hid::Error) -> Error {
 		Error::Hid(e)
@@ -50,6 +53,7 @@ impl From<libusb::Error> for Error {
 impl error::Error for Error {
 	fn cause(&self) -> Option<&dyn error::Error> {
 		match *self {
+			#[cfg(feature = "hid-device")]
 			Error::Hid(ref e) => Some(e),
 			Error::Usb(ref e) => Some(e),
 			_ => None,
@@ -60,6 +64,7 @@ impl error::Error for Error {
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
+			#[cfg(feature = "hid-device")]
 			Error::Hid(ref e) => fmt::Display::fmt(e, f),
 			Error::Usb(ref e) => fmt::Display::fmt(e, f),
 			Error::DeviceNotFound => write!(f, "the device to connect to was not found"),

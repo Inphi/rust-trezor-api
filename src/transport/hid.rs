@@ -6,7 +6,8 @@ use hid;
 use super::super::AvailableDevice;
 use crate::transport::error::Error;
 use crate::transport::protocol::{Link, Protocol, ProtocolV1};
-use crate::transport::{derive_model, AvailableDeviceTransport, ProtoMessage, Transport};
+use crate::transport::{derive_model, ProtoMessage, Transport};
+use crate::Model;
 
 mod constants {
 	///! A collection of constants related to the HID protocol.
@@ -29,18 +30,6 @@ const READ_TIMEOUT_MS: u64 = 100000;
 enum HidVersion {
 	V1,
 	V2,
-}
-
-/// An available transport for connecting with a device.
-#[derive(Debug)]
-pub struct AvailableHidTransport {
-	pub serial_nb: String,
-}
-
-impl fmt::Display for AvailableHidTransport {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "HID (serial nb: {})", &self.serial_nb)
-	}
 }
 
 /// An actual serial HID USB link to a device over which bytes can be sent.
@@ -121,6 +110,12 @@ fn probe_hid_version(handle: &mut hid::Handle) -> Result<HidVersion, Error> {
 	Err(Error::UnknownHidVersion)
 }
 
+struct AvailableHidDevice {
+	model: Model,
+	debug: bool,
+	serial_nb: String,
+}
+
 /// An implementation of the Transport interface for HID devices.
 pub struct HidTransport {
 	protocol: ProtocolV1<HidLink>,
@@ -128,9 +123,9 @@ pub struct HidTransport {
 
 impl HidTransport {
 	/// Find devices using the HID transport.
-	pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>, Error> {
+	pub fn find_devices(debug: bool) -> Result<Vec<Box<dyn AvailableDevice>>, Error> {
 		let hidman = hid::init()?;
-		let mut devices = Vec::new();
+		let mut devices = Vec::<Box<dyn AvailableDevice>>::new();
 		for dev in hidman.devices() {
 			let dev_id = (dev.vendor_id(), dev.product_id());
 			let model = match derive_model(dev_id) {
@@ -145,24 +140,26 @@ impl HidTransport {
 				None => continue,
 			};
 
-			devices.push(AvailableDevice {
-				model: model,
-				debug: debug,
-				transport: AvailableDeviceTransport::Hid(AvailableHidTransport {
-					serial_nb: serial,
-				}),
-			});
+			devices.push(Box::new(AvailableHidDevice {
+				model,
+				debug,
+				serial_nb: serial,
+			}));
 		}
 		Ok(devices)
 	}
+}
+
+impl AvailableDevice for AvailableHidDevice {
+	fn model(&self) -> Model {
+		self.model
+	}
+	fn debug(&self) -> bool {
+		self.debug
+	}
 
 	/// Connect to a device over the HID transport.
-	pub fn connect(device: &AvailableDevice) -> Result<Box<dyn Transport>, Error> {
-		let transport = match device.transport {
-			AvailableDeviceTransport::Hid(ref t) => t,
-			_ => panic!("passed wrong AvailableDevice in HidTransport::connect"),
-		};
-
+	fn transport(&self) -> Result<Box<dyn Transport>, Error> {
 		// Traverse all actual devices again and find the matching one.
 		let hidman = hid::init()?;
 
@@ -170,9 +167,9 @@ impl HidTransport {
 			.devices()
 			.find_map(|dev| {
 				let dev_id = (dev.vendor_id(), dev.product_id());
-				if derive_model(dev_id) == Some(device.model.clone())
-					&& derive_debug(&dev) == Some(device.debug)
-					&& dev.serial_number() == Some(transport.serial_nb.clone())
+				if derive_model(dev_id) == Some(self.model.clone())
+					&& derive_debug(&dev) == Some(self.debug)
+					&& dev.serial_number() == Some(self.serial_nb.clone())
 				{
 					Some(dev.open())
 				} else {
@@ -186,11 +183,19 @@ impl HidTransport {
 			protocol: ProtocolV1 {
 				link: HidLink {
 					_hid_manager: hidman,
-					hid_version: hid_version,
+					hid_version,
 					handle: Some(handle),
 				},
 			},
 		}))
+	}
+
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(
+			f,
+			"model:{}, debug:{}, HID (serial nb: {})",
+			self.model, self.debug, &self.serial_nb
+		)
 	}
 }
 
